@@ -1,21 +1,27 @@
 module Main where
 
-import Prelude (Unit, bind, const, show, (-), (+))
+import Prelude (Unit, bind, const, show, (-), (+), pure, ($))
 
+import Control.Apply ((*>))
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (EXCEPTION, throw)
 import Signal.Channel (CHANNEL)
 
-import Pux (renderToDOM, start, EffModel, noEffects)
+import Pux (renderToDOM, start, EffModel, onlyEffects, noEffects)
 import Pux.Html (Html, text, button, span, div)
 import Pux.Html.Events (onClick)
 
-data Action = Button
+data Action
+    = Button
+    | Nop
 
 type State = Int
 
-update :: forall eff. Action -> State -> EffModel State Action (eff)
-update Button state = noEffects state
+-- NOTE: here I tried to do some action with effect and I picked `throw`
+-- update :: forall eff. Action -> State -> EffModel State Action (err' :: CHANNEL | eff)
+update Button state = onlyEffects state [ liftEff $ throw "bla" *> pure Nop ]
+update Nop state = noEffects state
 
 view :: State -> Html Action
 view count =
